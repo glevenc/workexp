@@ -1,3 +1,23 @@
+constructure:
+
+TL1--------------------------------------->slam ----------------------------------->DBP
+   <---------------------------------------     <-----------------------------------
+                                           /||				
+											                      ||
+											                      ||
+											                      ||
+											                      ||
+											                      ||
+					                                  ||
+					 	 					                      ||					
+	 					                                ||/
+	 					                                clam---------------------------->sipr
+										                            <---------------------------
+TL1 agent: do some basic check for the input validation
+slam: corss check between two of more paraters in one command
+dbp: do cross check between two or more paraters in different commands
+clam: send the data request to layers(sip/ccs/)
+
 add one command RTRV : get data only from sipr
 
 db/scripts/SchemaUpgrade_Cmn_960.SQL
