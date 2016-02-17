@@ -1,0 +1,23 @@
+character:
+  defination: using single quotes
+    char ch = 'c';
+
+character array:
+  defination: a collection of characters using double quotes;
+  1. char ch[11] = {'a','b','c','d','e','f','g','h','i','j'}; //if the length is less than 10 then the other elements will be appened with 0
+     printf("the length of ch[]%d\n",strlen(ch)); //answer is 10
+     printf("the size of ch[] %d\n",sizeof(ch)); //answer is 11
+     char ch1[] = {'a','b','c','d','e','f','g','h','i','j'};
+     printf("the length of ch[]%d\n",strlen(ch)); //answer is 10
+     printf("the size of ch[] %d\n",sizeof(ch)); //answer is 10
+  this way of defining character you should add the last element to 0 manually.
+  2. char c[]="abcdefghij"; or char c[]={"abcdefghij"};
+     //there is a '\0' appending to the array
+     printf("the length of ch2[]%d\n",strlen(ch2)); //answer is 10
+     printf("the size of ch2[] %d\n",sizeof(ch2)); //answer is 11
+  综上，字符串数组的使用比较灵活，但安全性上实在是寒碜，只使用特别清晰、简单的小程序。
+
+character pointer:
+  defination: 
+    char *str="hello world!"; //这句仅仅是将“hello world!”的第一个字符的地址赋予str
+无论是字符数组还是字符指针都能越界访问，字符数组要手动的自己加 0 。
