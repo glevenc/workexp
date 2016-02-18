@@ -1,3 +1,42 @@
+TL1 command format:
+<command_code>:<staging_parameter_blocks>:<message_payload_block(s)>
+
+The staging parameter blocks determine the target NE and the identity of the object to be acted upon by the input message.
+The staging parameter blocks are a series of four data blocks following the command code.
+The structure of the staging parameter blocks is of the form
+:[<tid>]:[<aid(s)>]:<ctag>:[general block]:
+
+TID is the Target Identifier
+AID is the Access Identifier. This block contains one or more parameters that uniquely identify the entities within the target NE
+that are the object of the input message
+
+CTAG is the Correlation Tag. It correlates an input command with its associated output response(s).
+The value of the CTAG is a non-zero integer of up to six characters.
+
+The general block includes support parameters whose values affect the way in which the
+input command is to be executed in the NE.
+The general block is required for all input
+commands but its value can be null (that is, the general block is represented by two
+successive colons that are optional when no message payload follows)
+
+The message payload block(s)is the subject matter relating to the action to be performed by the input message.
+that is subject matter of themessage. This section of the message may consist of zero (for instance, for
+RTRV messages) or more data blocks in the following general form: (:<px>(,<px>)*)*;
+where "px" represents a parameter (that is, data item). Each data block is delimited by
+colons (:) and the last is terminated by a semi-colon (;). Each data block may have an
+unlimited number of data items, each delimited by commas (,). For example, a payload
+consisting of three parameter blocks, each containing three parameters would be of the
+form
+…:<p1>,<p2>,<p3>:<p4>,<p5>,<p6>:<p7>,<p8>,<p9>;
+
+for example:
+ent-prfL-sip:q2hp09:12:100::PDCSBILLING
+ENT-PRFL-SIP:[TID]:<sipPrflId>:[CTAG]::[MAXFWD=<maxFwd>]
+
+ ENT-PRFL-SIP  :[TID]:<sipPrflId>:[CTAG]:: 
+     |                     |
+<command_code>:<staging_parameter_blocks>:<message_payload_block(s)>
+
 constructure:
 
 
@@ -18,6 +57,9 @@ TL1 agent: do some basic check for the input validation
 slam: corss check between two of more paraters in one command
 dbp: do cross check between two or more paraters in different commands
 clam: send the data request to layers(sip/ccs/)
+
+TsSmiRowKey   *rowKey;  :后面的字段
+TsSmiRowKey is used at the SMI to uniuely identify a row of a table 
 
 进入slam的入口点：
 ../sl_tl1.c:2370 Entered slProcessTl1Evt transId = 0x4400000  tableId
