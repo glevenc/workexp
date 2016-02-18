@@ -1,24 +1,32 @@
 constructure:
 
+
 TL1--------------------------------------->slam ----------------------------------->DBP
    <---------------------------------------     <-----------------------------------
                                            /||				
-											                      ||
-											                      ||
-											                      ||
-											                      ||
-											                      ||
-					                                  ||
-					 	 					                      ||					
-	 					                                ||/
-	 					                                clam---------------------------->sipr
-										                            <---------------------------
+			                    ||
+					    ||
+					    ||
+					    ||
+					    ||
+					    ||
+					    ||					
+	 				    ||/
+	 				   clam---------------------------->sipr
+					       <---------------------------
 TL1 agent: do some basic check for the input validation
 slam: corss check between two of more paraters in one command
 dbp: do cross check between two or more paraters in different commands
 clam: send the data request to layers(sip/ccs/)
 
-add one command RTRV : get data only from sipr
+进入slam的入口点：
+../sl_tl1.c:2370 Entered slProcessTl1Evt transId = 0x4400000  tableId
+
+进入TL1的入口点：
+../agc_SIPT_NE_impl.c:15061 agc_SIPT_NE_ENT_PRFL_SIP_req called
+
+
+add one command RTRV need to change those files : get data only from sipr
 
 db/scripts/SchemaUpgrade_Cmn_960.SQL
 signaling/lm/clam/cl_tb_sipr.c
@@ -78,3 +86,127 @@ tl1/src/gencode/agc_SIPT_NE_meta_retrieval.c
 tl1/src/telcode/tl1_tsm.c
 tl1/src/user_impl/agc_SIPT_NE_impl.c
 tl1/xml/SIPT_NE_native.xml
+
+
+RTRV-PRFL-SIP:: request flow
+
+
+main( int argc, char *argv[])   // components/tl1/src/user_impl/lumos_entry_impl.c
+	 main_threads.c::lumos_multi_threaded(argc,argv)
+	 	1.1 initCommandSet(procInfo.ChassisType, procInfo.MgType, procInfo.SgType);//Initialize the TL1 command set for this chassis type
+	 			---master_req_array[master_req_list.length++] =(TL1_REQUEST_MESSAGE *)cmdMatrix[i].tl1CmdPtr; 
+	 				cmdMatrix[i]={&RTRV_PRFL_SIP_req_message,           ((                        PLT_MGC_ALL|PLT_ATCA_MGC_BIT|PLT_VCP_BIT|PLT_CLOUD_BIT) | UAP_VW     _MSK | CMD_EXM_BIT) },
+	 	1.2 threadId = eosl_thread_create( listen_loop, 0, (void *)&ports[i] ); ////create a listen thread.
+	 					1.2.1 listen_loop()::eosl_thread_create( main_loop,SESSION_THREAD_STACK_SIZE,(void *)ses_handle )//thread to manage the session
+	 							main_loop()::tc_process_data(ses_handle)
+	 								a_process_data( fd )
+	 									agent.c::s_a_process_requests( ses, &Current_Network_Element );
+	 										char *commandTmp = ts_extract_tl1_request( ses );//Extract the current request out of a session struct
+	 										 a_finalprocess_requests( ses, &Current_Network_Element, command );
+	 										 	TL1_REQUEST_STATUS:trs = tp_parse_tl1_request( ses->handle, command, &tl1_r );
+	 										 	 param_status = s_a_validate_parameter( ses, message_info, tl1_r ,command);
+	 										 	 	mapping_success =tl1_rm->request_map_function( ses->handle, tl1_r->ctag, trpl );
+	 										 	 	{const REQUEST_MAP_FUNCTION request_map_function; /* The request mapped function pointer*/}
+	 										 	 	typedef eosl_bool (* REQUEST_MAP_FUNCTION)( eosl_handle, TL1_TAG, TL1_REQUEST_PARAMETER_LIST *);
+	 										 	 	map to:agc_SIPT_NE.c::agc_SIPT_NE_RTRV_PRFL_SIP_map()
+	 										 	 	
+map to: 
+agc_SIPT_NE_RTRV_PRFL_SIP_map( const char * modifier, eosl_handle handle, TL1_TAG ctag, TL1_REQUEST_PARAMETER_LIST *lis t)
+	agc_SIPT_NE_RTRV_PRFL_SIP_req( modifier, handle, ctag,(char *)list->array[0]);
+		agc_SIPT_NE_impl.c::agc_SIPT_NE_RTRV_PRFL_SIP_req( const char * modifier,\                                                                
+20590                                          eosl_handle handle,\
+20591                                          TL1_TAG ctag ,\
+20592                                          char * _sipPrflId)
+		emfPkSmiSetReq(cmd, handle, transId, tableId, &rowKey, &colArray, &smCmd, TL1_MSG_TIMEOUT) send the req to slam
+			  TL1SendMsg()
+			  	rc = TL1QueueEventForPublication(&pubMsg) /* Queue message to be published by main thread
+			  		pthread_send_queue()
+			  			pthread_send_queue_opt()
+		emfUnpkSmiGetMultiResp(rtrvPrflSipMultiTsmResp, &smCmdPtr, &length, handle)
+			rtrvPrflSipMultiTsmResp()::agc_SIPT_NE_RTRV_PRFL_SIP_resp(modifier,
+10884                                    handle,
+10885                                    ctag,
+10886                                    finalCompletionCode,
+10887                                    rows,
+10888                                    lumosRowIndex,
+10889                                    "RTRV-PRFL-SIP",
+10890                                    tl1_b);
+				&RTRV_PRFL_SIP_resp_param()::&
+			tf_format_end_message( tl1_b, comment); 
+				tc_send_tl1_messsage( tl1_b); Send a TL1 message back to the oss
+					
+	
+TL1AGENT---->SLAM:	 										 	
+	 											
+emfPkSmiSetReq(cmd, handle, transId, tableId, &rowKey, &colArray, &smCmd, TL1_MSG_TIMEOUT):
+
+S16 slActvTsk(Pst *pst,Buffer *mBuf)
+	case ENTGA:
+		ret = handleGaPst(pst,mBuf); 
+			slHandleTL1Evt(pst, mbuf);
+				ret = SFndLenMsg(mbuf, &len);/* message from TL1 agent via GIT */
+				ret = SGetSBuf(slCb.region,slCb.pool, (Data **) &slSmCmd, sizeof(SMCMD_t));
+				ret = SRemPstMsgMult((Data *)slSmCmd, len, mbuf);
+				pSmCmd = slSmCmd;
+				switch(pSmCmd->Tl1Cmd.Cmd)
+				case (SM_RTRV_REQUEST):
+				ret = emfUnpkSmiSetReq(slSmCmd, slProcessTl1Evt, NULL /*&tsmPst*/, &myBuf, &len);
+					emfUnpkTsTransId(&transId, buf, len)
+					emfUnpkTsTableId(&tableId, buf, len)
+					emfUnpkTsRowKey(&rowKey, buf, len)
+					emfUnpkTsColArray(&colArray, buf, len)
+					ret = (*func)((TL1_CMD_BUF_t *)smCmd, pst, transId, tableId, &rowKey, &colArray);
+				slProcessTl1Evt(TL1_CMD_BUF_t  *tl1Cmd, Pst *pst,TsTransId transId,TsTableId tableId,TsSmiRowKey rowKey,TsSmiColArray *colArray)
+					case SM_RTRV_REQUEST:
+					slTl1Cb->lmTl1Evt = LM_TL1_RTRV_EVT;
+					ret = slTl1CheckAllClams(&tl1Err, &errClamId);
+					ret=slFindEvMt(slTl1Cb);  //builds the key and hashes into the event matrix
+						ret=cmHashListFind(&lmCb.evtMtTbl,(U8 *)&key,(U16)sizeof(LmKey), 0,(PTR *)&tmpMtHlBlk);//Find the event matrix
+					case LM_TL1_FSM_CLASS_1:
+					switch(slTl1Cb->lmTl1Evt)
+					case LM_TL1_RTRV_EVT:
+					tl1FsmEvt = SLTL1_EV_TL1_RTRV;
+					fsmInstId = slGetNextTl1FsmInst(); //It will be used to create the FSM instance.
+					ret = cmFsmInstInit(&slCb.tl1FsmCp[slTl1Cb->slTransCb.mtInfo->lmTl1Class],slTl1Cb,fsmInstId,NULL,0 /* no timeout */,
+2618                         SLTL1_ST_IDLE);
+					ret = cmFsmQueueEvt(&slCb.tl1FsmCp[slTl1Cb->slTransCb.mtInfo->lmTl1Class],slTl1Cb->fsmEnt.instId,tl1FsmEvt, NULL, NULL, FALSE);  //Queue the TL1 FSM
+					
+						ret = cmHashListFind()
+						ret=cmQInsert(&fsmEnt->evtQCp, evtQCb);
+						ret=cmFsmProcessEvtQ(fsmEnt);  //process the event queue for an FSM instance
+							ret=cmQGetNext(&fsmEnt->evtQCp, NULL, (void **)&evtQCb);
+							ret = fsmCp->evalEvDep(evtQCb->event, context, &evtQCb->pst, evtQCb->mBuf, &hold);
+							cmFsmDriver(evtQCb);   //run a FSM instance
+							|驱
+							|动
+							|找到状态机
+						   \/通过evt 来进行驱动slam kick off 
+						    slTl1_start_lower()
+								ret = (context->slTransCb.mtInfo->slTl1Func)(context);
+							 //in this process, it will check the LM Event Matrix in file lm_bdy1.c to find the cooresponding function.
+							 	LmEvtMt *lmEvtMt[LM_EVT_MT_MAX]=&lmTl1PrflSipRtrvMt,//LM Event Matrix}
+							 	lm_bdy1.c::LmEvtMt lmTl1PrflSipRtrvMt---IFSLAM(slTl1_rtrv_prflSip_fsm),
+				找到slTl1_rtrv_prflSip_fsm:
+					sl_prflsip.c::slTl1_rtrv_prflSip_fsm(SlTl1Cb *context)
+						    switch (context->userState)
+							    {                                                                                                                                 
+							    case PRFL_SIP_START:
+							        ret=slTl1_rtrv_prflSip_fsm_start(context);
+							        	ret=slInitPstDbpMngmt(&pst, &dbMngmtReq, TELICA_TABLE_PRFLSIP, DB_GET_ROWS, 0,DB_SET, transId);// /* setup hdr and pst for DBproxy */
+							        	ret = cmTbAddTbl(&dbMngmtReq.dbReq.tables, cb->prflSip->tableId, numRows,cb->prflSip, CM_TB_USER_ALLOCATED);//fill in the DbpMngmtReq
+							        	ret = cmPkDbMngmtReq(&dbMngmtReq, &pst);// pack and send GET request to DBproxy
+							        	context->userState = PRFL_SIP_AWT_DB_GET;
+							        	
+							        break;
+							    case PRFL_SIP_AWT_DB_GET:
+							        ret=slTl1_rtrv_prflSip_fsm_dbget(SlTl1Cb *context);
+							        	ret = cmUnpkDbMngmtCfm(&dbMngmtCfm, &context->fsmEnt.pst, context->fsmEnt.mBuf); ///* unpack DBproxy cfm */
+							        	ret = cmTbFndTbl(&dbMngmtCfm.dbConf.u.tables, TELICA_TABLE_PRFLSIP,0, &numRows, (void **)&cb->dbPrflSip); ///* unload data */
+							        	ret=slEncodeSmiCols(context, cb->dbPrflSip, numRows, &respPtr, &respSize);/* pack TL1 RTRV reponse */Encode table structure rows into SMI columns**            for getnextmutli cases
+							        	
+							        	
+							        break;
+							    default:
+							        SLM_LOG(SLM_ERR, "unsupported userState:%ld\n", context->userState);
+							        break;
+							    }    
