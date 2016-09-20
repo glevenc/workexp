@@ -1,0 +1,407 @@
+.profile
+
+# [ -s ~ees/tools/bin/eehook ] && . ~ees/tools/bin/eehook # DON'T EDIT OR MOVE THIS LINE!
+
+#------------------------------------------------------------------------#
+# Setup backspace, interrupt, etc.                                       #
+# The "not a tty" test is to skip this for certain network requests.     #
+# users should tune the "stty" line to meet with their preferences.      #
+#------------------------------------------------------------------------#
+if [ "`tty`" != "not a tty" ]; then
+        stty echoe erase '^h' kill '^x' intr '^?' 
+fi
+
+export PATH TERM
+export SHELL=/bin/ksh
+export TOOLS=~exptools
+export UNISON=~unison
+
+PATH=.:$HOME/bin:$PATH:/opt/55pub/bin:/opt/55sde/bin_1.0:$TOOLS/bin:$UNISON/bin
+ 
+# add SCMS bin to path
+# PATH=$PATH:~scms/bin
+# add cc, C++, tools to path
+# PATH=$PATH:/opt/SUNWspro/bin:/opt/C++2.1/bin:/usr/ccs/bin
+# add EES tools to path
+# PATH=$PATH:/usr/5ess/eetools/bin
+
+export EDITOR=vi
+export ENV=$HOME/.env
+export HISTSIZE=512
+export PS1="<$(uname -n):${LOGNAME}>\${PWD}:
+> "
+export PS2=">> "
+#export BIN=558
+
+export TERMINFO=/usr/share/lib/terminfo 
+# default pager
+export PAGER=more
+# allow messages
+mesg y
+# default umask
+umask 022
+# turn off post verification
+export POSTQUAL=/ask=no
+
+# more 5ESS stuff
+export PGMR="Gleven Cao"
+export DEVNAME="Gleven Cao"
+export ROOM="QD"
+export PHONE="532-861-5845"
+export HOMEPHONE="+86-532-5821631"
+export DEPT=apd2594ckd
+export EMAIL="gleven.cao@alcatel-lucent.com"
+export HRID=9184160
+export SUPER="Katie Zhang"
+# export SUPVPH=93870
+export IMR_ORIG=glevenc
+export IMR_PHONE=QD5845
+export IMR_LOC=$ROOM
+export IMR_DEPT=$DEPT
+# ve viewmap file
+export VIEWMAP=$HOME/.viewmap
+# for cdb
+export CDBOPTS="-mf -t -p2"
+# for inspect
+export INSPECTINIT="prtspool=postscript,-pport"
+# export variables over rexec
+RXPORT=TERM,PHONE,ROOM,DEVNAME,EMAIL,LINES
+
+if [ "`tty`" != "/dev/console" ] ; then
+        . $HOME/.profile_terms
+fi
+
+# Discover stuff
+export DISCTOOLS=~discbld
+export DISCEDITOR=1
+# export PRINTER=ch/gdcprt9
+if [ -z "$DISPLAY" ]
+then
+     export DISPLAY=`who am i|cut -f2|sed -e 's/^(//'|sed -e 's/)$//'`:0
+fi
+
+if [ -z "$REMOTEHOST" ]
+then
+     export REMOTEHOST=`uname -n`
+fi
+
+export NEWDISCOVER=1
+
+export DISCPRIV=$HOME/DISCpriv #you can change this but the new directory must
+                        #have a subsystems subdirectory in it.  This
+                        #directory is used by Discover for any private
+                        #models you build, for any edget files, and
+                        #for storage of your groups (in subsystems dir)
+
+# the line below is invoking the discover setup script
+# . $DISCTOOLS/profile.discover
+
+# set up TMS
+. ~ats/tes/bin/l_ats
+
+case `uname -n` in
+ihees*)
+        PATH=~ees/tools/bin:$PATH:~ees/adm/bin
+        ;;
+ihlb*|ihecms)
+        PATH=$PATH:/usr/5ess/pub/bin:/opt/x11r6/bin:/usr/5ess/common/bin_1.0
+        echo " "
+        echo "------------- Here goes fortune... ---------------"
+        fortune
+        echo
+        ;;
+esac
+
+
+Add the following to the default emails for the logbk tool:
+
+logbktms@ihecms.ih.lucent.com
+otas-logbk@list.lucent.com
+
+
+http://gdcqd2.cn.lucent.com/~tmsadmin/tms_newuser.html
+-----------------------------------
+
+To break out of the logbk tool just exit the window.
+
+
+======
+davek login on ihecms for TMS setup.
+
+After basic environment setup execute:
+
+~ats/tes/bin/l_ats
+
+select the LSS load
+=========
+TMS updates in the logbk entry:
+
+SETNAME=dt_fs5k9.1
+APPL=NGFS
+GRP=ISDN_DB
+
+example:
+bc4710 1 d.kelly case90:1,case91:1,case92:1,case93:1
+
+=============
+note: there is a character limit to using logbk and they cannot be split
+across multiple lines.  Multiple entries can be used.
+=============
+
+To see who owns a TMS MR:
+
+tmsown -M <MR number>
+
+==============
+
+For tmsrun script files, look under /home/mcbride/NGFS/9.1/DT
+
+tmsrun -S <file>
+
+**************
+NOTE:  If re-running a test with other cases, change the date or time so that
+the TMS status for pre-run cases isn't overwritten.
+***************
+
+
+Radeke, Kelley A (Kelley) [4:35 PM]:
+ casestat = case105:0, case125:0,
+Radeke, Kelley A (Kelley) [4:35 PM]:
+for example.. remove the space between the cases.
+=========
+use d.kelly in the run files
+==========
+To delete status for a test (all cases) do:
+
+tmsrdel where setname=<> and tidnum=<>
+========
+tmsstat -C to see the cases.
+
+tmsstat -C where setname=dt_fs5k9.2.1 and grp=OAPI-ANONYMOUS
+
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+/////////////////////////////////////////////////
+
+To get a read-only copy of a test script:
+
+tmsget -n <testid>
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+To query the TMS DB for owner/words/etc:
+
+tmsquery -I where orig=*kelly and title=*level*
+
+
+To query for scheduling info for setname/group/tidnum:
+
+tmsquery select scheduling where tidnum=zf7214
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+For test script changes:
+
+tmsget <testid>  // this will get the file and give an MR number
+tmsput
+tmssubmit
+
+If a test changes to remove/add cases then the test plan will have to change.  Inform the test
+plan coordinator.
+===============================
+REMOVING TESTS from test set:
+
+If tests (results) have been run:
+
+tmsrdel where setname=<setname> and tidnum=<test no.>
+
+and then
+
+tmspdel where setname=<setname> and grp=<groupname> and tidnum=<test No.>
+
+===============================
+ADDING new tests into TMS:
+
+tmsgen -m (number of tests)
+
+It will prompt for Title, Owner (l.i.loucaides), Originator (d.kelly),
+Script Status (H), Requirements, Feature, References, Functional Area (400),
+Test Level (G), Original Target Application (NGFS), Parent Tests,
+Execution Mode (MAN), Estimated Execution Time, Description,
+Issue Notes (D. W. Kelly - 10/23/14), Resources/Config, Initial Setup
+
+This will create file(s) xxnnnn.s that can be edited.
+
+then do
+
+tmsadd for the test ID numbers (will get an MR that can be reused)
+
+(example: tmsadd ab1234.s ab1235.s ab1235.s)
+
+then do
+
+tmscheck <script> to validate the format
+
+then do
+
+tmssubmit the MR  (wait 12 hours for the tests to be visable from tmsadd)
+
+====================================
+ADDING the tests into a test set:
+
+Can do this as soon as the tests have been added.
+
+tmsplan .... (type "?" for help with field values)
+
+it will prompt for setname (dt_fs5kxxxxx), appl (NGFS),
+phase (9.2),
+tidnum(aaNNNN), pload(xx.yy), pplace(SYSLAB), testtype(NEW),
+plancase(case1,case2,....)
+=================================
+test status:
+
+STATUS values meaning  
+0 Passed, no MR 
+1 Failed, MR(s) 
+2 Failed, test wrong 
+3 Passed with MR(s) 
+4 Under study 
+5 Blocked due to prod 
+6 Blocked due to env 
+7 Resource conflict 
+================================
+tmshelp will give you a menu selection and you can go look at
+verious TMS area scripts and command and query options.  Can also
+print them out.
+================================
+
+
+
+/lhome/davek/tms/17.0/UTAS:
+
+
+> tmsnewid
+The assigned test script id is ne2678
+
+The assigned test script id is ne2678   MR tmsne328e.
+	tmsget ne2678.s
+	tmscheck ne2678.s
+	tmsput ne2678.s
+	tmssubmit( -M <MR>)
+
+	tmsget ne2680.s  tmsne328e
+	
+	
+	> tmsnewid -m 1
+The assigned test script id is ne2680
+
+
+tmscheck ne2680.s
+
+
+1. setname from PjM/link: http://smrelpjm.web.lucent.com/release_all/
+2. Add a schedule
+	tmssched -S feature_sched
+3. create testID
+        tmsnewid -m IdNum
+4. Add a plan
+	tmsplan -S feature_plan
+5. add test scripts
+	tmscheck <tidnum>.s
+ 	tmsadd <tidnum>.s
+ 	tmssubmit( -M <MR>)
+6. modify existing test scripts
+	tmsget <tidnum>.s
+	tmscheck <tidnum>.s
+	tmsput <tidnum>.s
+	tmssubmit( -M <MR>)
+7. update result
+	tmsrun -S result
+8. delete a plan
+	tmspdel -o plan.out where setname = ct_postisc24.3_FDD and grp = 98142_CTC_TransitI_enhancement_DT
+9. delete a result
+	tmsrdel  where setname = ct_postisc24.3_FDD and grp = 98142_CTC_TransitI_enhancement_DT
+10. delete a schedule
+	tmssdel where setname = ct_postisc24.3_FDD and grp = 98142_CTC_TransitI_enhancement_DT
+
+11.get a plan
+	tmspcpy where setname = ct_isc24.3_FDD and grp = 97029_ObtLocViaSHBetEAndSDM
+	tmsscpy where setname=ct_isc25.0_FDD and grp = 99054_PAIDFrommanipulation
+	tmsrcpy
+
+Delete an existing plan: delete result->delete plan -> delete schedule
+Update result by web:
+/home/perpich/bin/test_stat -t -m -s -q -g -p r26lss -w where setname=ct_isc22.2.1_FDD and grp=76.1456_digit_statistics_du1
+
+
+tmsrcpy where setname=fdd_utas17N_db and grp=14341_del11_ut
+tmsrcpy where setname=fdd_utas17N_db and grp=14341_del6_dbgw2 and tidnum=nc8249
+
+/lhome/ficow
+
+
+Project/Feature/Work Item Number: FC014341, FC014189
+Project Name: uTAS
+Project Release: 17.0
+TMS set name/group name/: fdd_utas17N_db
+Sub-system name: Deliverable Name: csp
+
+
+
+plan:
+setname = fdd_utas17N_db
+appl = NGFS
+grp = 14341_del11_ut
+phase = phase1
+tidnum = nd9312
+pload = 34.00
+pplace = MINILAB
+testtype = REG
+pusr1 =
+pusr2 =
+plancase = case1, case2, case3, case4, case5, case6, case7, case8, case9, case10, case11, case12
+pconfig =
+pparams =
+pcomment = 
+
+schulde:
+
+setname = fdd_utas17N_db
+appl = NGFS
+grp = 14341_del11_ut
+phase = phase1
+testorg = DT
+tteam = G.Cao
+begindate = 08-JUN-2016
+enddate = 22-JUN-2016
+planwritten = 4
+planrun = 4
+scomment = 
+
+
+result:
+
+setname = fdd_utas17N_db
+appl = NGFS
+grp = 14341_del11_ut
+tidnum = nc9685
+rload = R3408.00
+rplace = DEVNODE
+tester = G.Cao
+rexectime = 300
+run = 29-August-2016 08:00 am
+official = y
+rmode = MAN
+status = 0
+casestat = Case1:0,Case2:0,Case3:0,Case4:0,Case5:0,Case6:0 
+
+
+tmsrcpy where setname=fdd_utas17N_db and grp=14341_del11_ut 
+
+tmsrcpy where setname=fdd_utas17N_db and grp=14341_del10_rpgw and tidnum=ne2168
+
+tmsrun -S mytest1.run
+
+tmsscpy where setname=fdd_utas17N_db 
+tmsrcpy where setname=fdd_utas17N_db and grp=14341_del6_dbgw2 and tidnum=nc8249
