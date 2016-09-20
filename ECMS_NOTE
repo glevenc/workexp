@@ -1,0 +1,59 @@
+*** To build entire csp:
+
+Set up env
+Copy your file to the corresponding directory (e.g. $ROOT/csp/asprov/fsdb_common) 
+cd $ROOT/csp 
+bsubcmd -s csp
+(use bjobs to see the build status, or use ~tonyli/bin/seejob to see status; 
+final build log file is cspbld.out) 
+eidcheck cspbld.out
+Final binary would be: $ROOT/obj/linux_x86/csp/bin/dbgw & ASDAappl
+
+*** "small build":
+
+*** For dbgw:
+mkdir $ROOT/csp/asprov/dbgw
+cd $ROOT/csp/asprov/dbgw
+bsub -q $Q_ATCA "nmake -f dbgw.mk all > atca_bld.out 2>&1"
+(use bjobs or seejob to see build status) eidcheck atca_bld.out
+
+*** For ASDAappl:
+mkdir $ROOT/csp/asda
+cd $ROOT/csp/asda
+bsub -q $Q_ATCA "nmake -f asda.mk all > atca_bld.out 2>&1"
+(use bjobs or seejob to see build status) eidcheck atca_bld.out
+
+***For rpgwmon:
+ rm -rf ${ROOT}/obj; 
+ cd ${ROOT}/csp/rpgw/rpgwmon; 
+ chmod 444 ./*.cpp ./*.mk;
+ mv bld.out bld.out.$(date '+%y%m%d%H%M%S');
+ bsub -q $Q_ATCA "nmake -f rpgwmon.mk all> bld.out 2>&1" 
+
+*** Another important change to enable build:
+
+I've made a sample copy of the .rhosts on lsslogin1, it's:
+  /home/tonyli/sample_rhosts
+
+It can just be copied over to your $HOME to be the .rhosts file, then you substitute all the "tonyli" with your login. After modification, please use "chmod 400 .rhosts" command to change the file permission.
+
+*** inspect command
+
+inspect g=$ISSUE mr=<MR> [incmr=<inc_MR>] ncsl=c prtspool="color -l90" context=f40 report=y | ps2pdf - - > <name>.pdf
+
+inspect g=$ISSUE old=<old_file> new=<new_file> ifr=y ncsl=c prtspool="color -l90" context=f40 report=y | ps2pdf - - > <name>.pdf
+
+open IMR:
+1.http://webimr.ih.lucent.com/  
+2.open MR: 
+  no5mr g=$GENERIC imr=956871
+  Add a file>  no5addsrc g=$GENERIC feature=y dir=tl/config config.db
+  Check out>  vedget g=$GENERIC mr=csp956871a filename
+  Edit>  ve config.db  :set whole=n
+  Put In>  vedput g=$GENERIC mr=csp956871a config.db
+  Get all mr modified file>  getversion rm=y g=$GENERIC mr=csp957037a,csp957037b,csp957037c
+  Solve this MR>  mrsolve g=$GENERIC mr=csp956871a
+  
+  submit code:
+  http://webimr.ih.lucent.com/pub_update/usel.cgi?pcc=lssr34&imrno=957037 
+  restrict pcc=lssr34 load=09.00 g=rel34 imrno=957037 
