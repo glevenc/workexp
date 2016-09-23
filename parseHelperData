@@ -1,0 +1,97 @@
+
+/*
+ * Function: parseHelperData
+ *
+ * Description:Parse delimiter separated msg into array pa of null terminated fields. 
+ *      WARNING: this function modifies the input string
+ *
+ * Input: msg - char array of string, null terminated
+ *    m_size - size of msg
+ *    char delimiter
+ *    pa - addr of array of char pointers 
+ *    p_size - size of the array of char pointers
+ *
+ * Output: 
+ *    msg - all delimiter will be replaced by '\0'
+ *    pa - pointers to each elements in msg
+ *
+ * Returns: n - number of elements found in the msg
+ *          -1 - error in input 
+ */
+ 
+ int parseHelperData(char *msg, int m_size, char delimiter, char *pa[], int p_size)
+{
+    int n = 0;
+ 
+    if (IS_VALID_PTR(pa) == FALSE)
+    {
+        cout<<"bad input pa ptr!!";
+        return -1;
+    }
+
+    if (IS_VALID_PTR(msg) == FALSE)
+    {
+       //ASRT_RPT( ASRTBADPARAM, 0, "bad input msg ptr %p", msg);
+       cout<<"bad input msg ptr"<<endl;
+
+       return -1;
+    }
+
+    if (m_size <= 0 || p_size <= 0)
+    {
+        cout<<"bad input m_size %d or p_size %d "<<m_size<<p_size<<endl;
+
+        return -1;
+    }
+
+    if (msg[0] != '\0')
+    {
+    pa[n++] = &msg[0];
+        for (int i = 0; i < m_size; i++)
+    {
+        if (msg[i] == '\0') break;
+        if (msg[i] == delimiter)
+        {
+        msg[i] = '\0';
+        if (n > p_size)
+        {
+            return p_size;
+        }
+        pa[n++] = &msg[i+1];
+        }
+    }
+    return n;
+    }
+    return -1;
+}
+
+int main()
+{
+    char msg[50] = {0};
+    strcpy(msg,"UPDATE,0,HS");
+   //char *msg1 = "UPDATE,0,TXS,svclbl,1.2.3.4,,11.22.33.44";
+    int num_addr =0;
+    char *l4td_txl[5];
+#if 0
+     for (int i=0; i < 5; i++)
+    {
+    l4td_txl[i] = NULL;
+    }
+#endif
+     cout<<strlen(msg)<<endl;
+    num_addr = parseHelperData(msg, strlen(msg), ',', l4td_txl, 5);
+    cout<<num_addr<<endl;
+
+    for(int i=0; i<num_addr; i++)
+    {
+        cout<<l4td_txl[i]<<" ";
+    }
+    cout<<endl;
+    
+    return 0;
+}  
+
+results:
+11
+3
+UPDATE 0 HS 
